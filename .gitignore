@@ -1,0 +1,11 @@
+.vs
+*.log
+*.tlog
+*.obj
+*.idb
+*.pdb
+x64
+Release
+Debug
+*.ppm
+doc
