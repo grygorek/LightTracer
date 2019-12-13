@@ -12,7 +12,7 @@ enum class MaterialType
 
 struct Material
 {
-  Vec3f surfaceColor, emissionColor; 
+  Vec3f color;
   Vec3f::type transparency;
   Vec3f::type reflection;
 };

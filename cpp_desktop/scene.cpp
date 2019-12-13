@@ -1,5 +1,6 @@
 #include "debug_output.h"
 #include "image.h"
+#include "light.h"
 #include "render.h"
 #include "sphere.h"
 #include <chrono>
@@ -32,10 +33,11 @@ void scene(Image &image)
   spheres.push_back(std::make_unique<SphereSimple>(
       Vec3f(-5.5f, 0.f, -15.f), 3, Vec3f(0.90f, 0.90f, 0.90f), 0.02, 0.0));
   // light
-  ObjectsCollection lights;
-  lights.push_back(std::make_unique<SphereSimple>(Vec3f(0.0f, 20.f, -30.f), 3,
-                                                   Vec3f(0.00f, 0.00f, 0.00f),
-                                                   0, 0.0, Vec3f(2.f)));
+  LightsCollection lights;
+  lights.push_back(std::make_unique<PointLight>(Vec3f(40.0f, 20.f, -30.f),
+                                                Vec3f(1.f), 2000));
+  // lights.push_back(std::make_unique<DistantLight>(
+  //   Vec3f(-1.0f, -1.f, -1.f).normalize(), Vec3f(1.f), 1));
 
   auto objGeneration{std::chrono::high_resolution_clock::now()};
 

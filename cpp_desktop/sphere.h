@@ -37,7 +37,7 @@ public:
       : center(center_)
       , radius(radius_)
       , radius2(radius * radius)
-      , material{surfaceColor_, emissionColor_, transparency_, reflection_}
+      , material{surfaceColor_, transparency_, reflection_}
   { /* empty */
   }
 #if 0

@@ -190,6 +190,7 @@ public:
   Vec3<T> operator-() const { return Vec3<T>(-x, -y, -z); }
   T length2() const { return x * x + y * y + z * z; }
   T length() const { return sqrt(length2()); }
+  T norm() const { return length(); }
 
   friend std::ostream &operator<<(std::ostream &os, const Vec3<T> &v)
   {

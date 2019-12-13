@@ -3,24 +3,27 @@
 
 #include "geometry.h"
 
+struct ShadeProperty
+{
+  Vec3f lightDir;
+  Vec3f lightIntensity;
+  float lightDistance;
+};
+
 /// Light base class
 class Light
 {
 public:
-  Light(const Vec3f &pos, const Vec3f &c = 1, const float &i = 1)
-      : color(c)
-      , intensity(i)
-      , position(pos)
+  Light(const Vec3f &color = 1, float intensity = 1)
+      : color(color)
+      , intensity(intensity)
   {
   }
   virtual ~Light() {}
-  virtual void Illuminate(const Vec3f &hitPoint, Vec3f &lightDir,
-                          Vec3f &lightIntensity,
-                          float &lightDistance) const = 0;
+  virtual ShadeProperty Illuminate(const Vec3f &hitPoint) const = 0;
 
   Vec3f color;
   float intensity;
-  Vec3f position;
 };
 
 /// Distant light
@@ -29,41 +32,37 @@ class DistantLight : public Light
   Vec3f dir;
 
 public:
-  DistantLight(const Vec3f &position, const Vec3f &direction,
-               const Vec3f &c = 1, const float &i = 1)
-      : Light(position, c, i)
+  DistantLight(const Vec3f &direction, const Vec3f &color = 1,
+               float intensity = 1)
+      : Light(color, intensity)
       , dir(direction.normalize())
   {
   }
 
-  void Illuminate(const Vec3f &P, Vec3f &lightDir, Vec3f &lightIntensity,
-                  float &distance) const override
+  ShadeProperty Illuminate(const Vec3f &P) const override
   {
-    lightDir       = dir;
-    lightIntensity = color * intensity;
-    distance       = kInfinity;
+    return ShadeProperty{dir, color * intensity, kInfinity};
   }
 };
 
 // Point light
 class PointLight : public Light
 {
+  Vec3f position;
 
 public:
-  PointLight(const Vec3f &pos, const Vec3f &c = 1, const float &i = 1)
-      : Light(pos, c, i)
+  PointLight(const Vec3f &pos, const Vec3f &color = 1, float intensity = 1)
+      : Light(color, intensity)
+      , position(pos)
   {
   }
   // P: is the shaded point
-  void Illuminate(const Vec3f &P, Vec3f &lightDir, Vec3f &lightIntensity,
-                  float &distance) const
+  ShadeProperty Illuminate(const Vec3f &P) const override
   {
-    lightDir = (P - position);
-    float r2 = lightDir.norm();
-    distance = sqrt(r2);
-    lightDir = lightDir / distance;
-    // avoid division by 0
-    lightIntensity = color * intensity * (1.f / (4 * M_PI * r2));
+    auto distVec = (P - position);
+    auto r2      = distVec.norm();
+    auto lIntens = color * intensity * (1.f / (4.f * M_PI * r2));
+    return ShadeProperty{distVec.normalize(), lIntens, sqrt(r2)};
   }
 };
 
