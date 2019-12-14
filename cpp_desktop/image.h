@@ -15,7 +15,6 @@ public:
   const int width;
   const int height;
 
-
   Image(int width_, int height_)
       : width{width_}
       , height{height_}
@@ -31,7 +30,7 @@ public:
   auto end() { return std::end(pixels); }
   const auto end() const { return std::end(pixels); }
 
-  friend void SaveToFile(std::string filename, const Image& i)
+  friend void SaveToFile(std::string filename, const Image &i)
   {
     // Save result to a PPM image (keep these flags if you compile under
     // Windows)
@@ -52,13 +51,16 @@ private:
   std::vector<Vec3f> pixels;
 };
 
-inline int32_t Colour(const Vec3f &colour)
+inline int32_t Colour(const Vec3f &colour, bool bgr_order = true)
 {
   int32_t r = static_cast<unsigned char>(std::min(1.f, colour.x) * 255);
   int32_t g = static_cast<unsigned char>(std::min(1.f, colour.y) * 255);
   int32_t b = static_cast<unsigned char>(std::min(1.f, colour.z) * 255);
 
-  return (b << 16) | (g << 8) | r;
+  if (bgr_order)
+    return (b << 16) | (g << 8) | r;
+  else
+    return (r << 16) | (g << 8) | b;
 }
 
 #endif // !IMAGE_H

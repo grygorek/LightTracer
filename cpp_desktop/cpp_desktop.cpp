@@ -1,5 +1,9 @@
 // cpp_desktop.cpp : Defines the entry point for the application.
 //
+#include <windows.h>
+#include <gdiplus.h>
+#include <objidl.h>
+#pragma comment(lib, "Gdiplus.lib")
 #include "framework.h"
 
 // remove windows crap
@@ -23,15 +27,34 @@
 HINSTANCE hInst;                     // current instance
 WCHAR szTitle[MAX_LOADSTRING];       // The title bar text
 WCHAR szWindowClass[MAX_LOADSTRING]; // the main window class name
-Image g_image{800, 600};             // rendered image
+Image g_image{1024, 768};            // rendered image
 bool g_fImageReady{false};
+
+extern std::unique_ptr<Gdiplus::Bitmap> g_bitmap;
+
 
 // Forward declarations of functions included in this code module:
 ATOM MyRegisterClass(HINSTANCE hInstance);
 HWND InitInstance(HINSTANCE, int);
 LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
-void DrawImage(const HDC &hdc, const Image &image);
 INT_PTR CALLBACK About(HWND, UINT, WPARAM, LPARAM);
+
+void DrawImage(HDC &hnd, const Image &image)
+{
+  int width{0};
+  int height{0};
+  for (const auto &pixel : image)
+  {
+    if (width >= image.width)
+    {
+      width = 0;
+      height++;
+    }
+    SetPixel(hnd, width++, height, Colour(pixel));
+  }
+}
+
+void OnPaint(HDC &hnd, Image &image);
 
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
                       _In_opt_ HINSTANCE hPrevInstance, _In_ LPWSTR lpCmdLine,
@@ -53,6 +76,11 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
   {
     return FALSE;
   }
+
+     // Initialize GDI+.
+  Gdiplus::GdiplusStartupInput gdiplusStartupInput;
+  ULONG_PTR gdiplusToken;
+  Gdiplus::GdiplusStartup(&gdiplusToken, &gdiplusStartupInput, NULL);
 
   // triangle_test();
 
@@ -85,6 +113,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     }
   }
   t.join();
+  g_bitmap = nullptr;
+  Gdiplus::GdiplusShutdown(gdiplusToken);
   return (int)msg.wParam;
 }
 
@@ -187,7 +217,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     HDC hdc = BeginPaint(hWnd, &ps);
 
     if (g_fImageReady)
-      DrawImage(hdc, g_image);
+    {
+      OnPaint(hdc, g_image);
+    }
     else
     {
       const std::string s{"Rendering, plese wait..."};
@@ -208,19 +240,4 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     return DefWindowProc(hWnd, message, wParam, lParam);
   }
   return 0;
-}
-
-void DrawImage(const HDC &hdc, const Image &image)
-{
-  int width{0};
-  int height{0};
-  for (const auto &pixel : image)
-  {
-    if (width >= image.width)
-    {
-      width = 0;
-      height++;
-    }
-    SetPixel(hdc, width++, height, Colour(pixel));
-  }
 }
