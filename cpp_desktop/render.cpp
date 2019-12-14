@@ -101,6 +101,30 @@ bool IsIntersect(const Object &obj, const Vector &hitPoint,
   return obj->intersect(hitPoint, vecDir, t, i, uv);
 }
 
+Vec3f DiffuseShader(const Vec3f &phit, const Surface &surf,
+                    const ObjectsCollection &objects,
+                    const LightsCollection &lights)
+{
+  Vec3f hitColor{};
+  for (const auto &light : lights)
+  {
+    ShadeProperty shade{light->Illuminate(phit)};
+    auto inShade{false};
+    for (const auto &obj : objects)
+    {
+      if (IsIntersect(obj, phit, -shade.lightDir))
+      {
+        inShade = true;
+        break;
+      }
+    }
+    if (!inShade)
+      hitColor += surf.material->color * surf.albedo * shade.lightIntensity *
+                  std::max(0.f, surf.hit_normal.dot(-shade.lightDir));
+  };
+  return hitColor;
+}
+
 Vec3f trace(const Vec3f &rayorig, const Vec3f &raydir,
             const ObjectsCollection &objects, const LightsCollection &lights,
             int depth) noexcept
@@ -117,25 +141,16 @@ Vec3f trace(const Vec3f &rayorig, const Vec3f &raydir,
   const auto phit = rayorig + raydir * std::get<1>(nearestObj);
   const auto surf = obj->SurfaceProperties(phit, raydir);
   auto bias       = 1e-4 * surf.hit_normal;
-  Vec3f hitColor{};
 
-  for (const auto &light : lights)
+  if (surf.material->reflection)
   {
-    ShadeProperty shade{light->Illuminate(phit)};
-    auto inShade{false};
-    for (const auto &obj : objects)
-    {
-      if (IsIntersect(obj, phit + bias, -shade.lightDir))
-      {
-        inShade = true;
-        break;
-      }
-    }
-    if (!inShade)
-      hitColor += surf.material->color * surf.albedo * shade.lightIntensity *
-                  std::max(0.f, surf.hit_normal.dot(-shade.lightDir));
-  };
-  return hitColor;
+    auto reflDir = (raydir - 2 * raydir.dot(surf.hit_normal) * surf.hit_normal)
+                       .normalize();
+    return surf.material->color *
+           trace(phit + bias, reflDir, objects, lights, depth + 1);
+  }
+
+  return DiffuseShader(phit + bias, surf, objects, lights);
 }
 
 /// Main trace function. It takes a ray as argument (defined by its

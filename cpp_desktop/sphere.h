@@ -32,8 +32,7 @@ public:
   Vec3f::type radius, radius2; /// sphere radius and radius^2
   Material material;
   SphereSimple(const Vec3f &center_, float radius_, const Vec3f &surfaceColor_,
-               Vec3f::type reflection_ = 0, Vec3f::type transparency_ = 0,
-               const Vec3f &emissionColor_ = 0) noexcept
+               Vec3f::type reflection_ = 0, Vec3f::type transparency_ = 0) noexcept
       : center(center_)
       , radius(radius_)
       , radius2(radius * radius)
