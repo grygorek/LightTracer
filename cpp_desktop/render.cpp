@@ -1,7 +1,9 @@
 #include "geometry.h"
 #include "sphere.h"
 #include <algorithm>
+#include <array>
 #include <fstream>
+#include <future>
 #include <iostream>
 #include <tuple>
 #include <vector>
@@ -279,16 +281,28 @@ void render(const ObjectsCollection &objects, const LightsCollection &lights,
   const float aspectratio = image.width / static_cast<float>(image.height);
   const float angle       = static_cast<float>(tan(M_PI * 0.5 * fov / 180.));
 
-  // Trace rays
-  for (auto y{0}, pixel{0}; y < image.height; ++y)
-  {
-    for (auto x{0}; x < image.width; ++x, ++pixel)
+  auto trace_piece = [&](int height_begin, int height_end) {
+    // Trace rays
+    for (auto y{height_begin}, pixel{height_begin * image.width};
+         y < height_end; ++y)
     {
-      float xx = (2 * ((x + 0.5f) * invWidth) - 1) * angle * aspectratio;
-      float yy = (1 - 2 * ((y + 0.5f) * invHeight)) * angle;
-      Vec3f raydir(xx, yy, -1);
-      image[pixel] =
-          trace(Vec3f(0, 0, 5), raydir.normalize(), objects, lights, 0);
+      for (auto x{0}; x < image.width; ++x, ++pixel)
+      {
+        float xx = (2 * ((x + 0.5f) * invWidth) - 1) * angle * aspectratio;
+        float yy = (1 - 2 * ((y + 0.5f) * invHeight)) * angle;
+        Vec3f raydir(xx, yy, -1);
+        image[pixel] =
+            trace(Vec3f(0, 0, 25), raydir.normalize(), objects, lights, 0);
+      }
     }
-  }
+  };
+
+  auto a0 = std::async(trace_piece, image.height / 8 * 0, image.height / 8 * 1);
+  auto a1 = std::async(trace_piece, image.height / 8 * 1, image.height / 8 * 2);
+  auto a2 = std::async(trace_piece, image.height / 8 * 2, image.height / 8 * 3);
+  auto a3 = std::async(trace_piece, image.height / 8 * 3, image.height / 8 * 4);
+  auto a4 = std::async(trace_piece, image.height / 8 * 4, image.height / 8 * 5);
+  auto a5 = std::async(trace_piece, image.height / 8 * 5, image.height / 8 * 6);
+  auto a6 = std::async(trace_piece, image.height / 8 * 6, image.height / 8 * 7);
+  auto a7 = std::async(trace_piece, image.height / 8 * 7, image.height / 8 * 8);
 }
