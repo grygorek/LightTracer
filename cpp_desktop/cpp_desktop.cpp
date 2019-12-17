@@ -84,13 +84,13 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
   // triangle_test();
 
-  auto start = std::chrono::high_resolution_clock::now();
-  auto mesh  = LoadPolyMeshFromFile("./geometry/backdrop.geo", IdentityMtx44f);
-  auto tt = DeltaTimeMilisec(std::chrono::high_resolution_clock::now(), start);
-  if (!mesh)
-    OutputDebugString("Failed to load mesh\n");
-  else
-    OutputDebugString("Load Time: " + std::to_string(tt) + "ms\n");
+  //auto start = std::chrono::high_resolution_clock::now();
+  //auto mesh  = LoadPolyMeshFromFile("./geometry/backdrop.geo", IdentityMtx44f);
+  //auto tt = DeltaTimeMilisec(std::chrono::high_resolution_clock::now(), start);
+  //if (!mesh)
+  //  OutputDebugString("Failed to load mesh\n");
+  //else
+  //  OutputDebugString("Load Time: " + std::to_string(tt) + "ms\n");
 
   std::thread t{[hWnd]() {
     scene(g_image);

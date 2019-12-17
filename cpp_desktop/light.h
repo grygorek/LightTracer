@@ -61,7 +61,7 @@ public:
   {
     auto distVec = (P - position);
     auto r2      = distVec.norm();
-    auto lIntens = color * intensity * (1.f / (4.f * M_PI * r2));
+    auto lIntens = color * intensity * static_cast<float>(1.f / (4.f * M_PI * r2));
     return ShadeProperty{distVec.normalize(), lIntens, sqrt(r2)};
   }
 };

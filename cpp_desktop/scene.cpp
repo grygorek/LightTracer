@@ -21,30 +21,31 @@ void scene(Image &image)
 
   ObjectsCollection spheres;
   // position, radius, surface color, reflectivity, transparency
-  spheres.push_back(
-      std::make_unique<SphereSimple>(Vec3f(0.0f, -10004.f, -20.f), 10000,
-                                     Vec3f(0.20f, 0.20f, 0.20f), 0.00, 0.0));
-  spheres.push_back(std::make_unique<SphereSimple>(
-      Vec3f(0.0f, 0.f, -20.f), 4, Vec3f(1.00f, 0.32f, 0.36f), 1.f, 0.0));
-  spheres.push_back(std::make_unique<SphereSimple>(
-      Vec3f(5.0f, -1.f, -15.f), 2, Vec3f(0.90f, 0.76f, 0.46f), .0, 0.0));
-  spheres.push_back(std::make_unique<SphereSimple>(
-      Vec3f(5.0f, 0.f, -25.f), 3, Vec3f(0.65f, 0.77f, 0.97f), .0, 0.0));
-  spheres.push_back(std::make_unique<SphereSimple>(
-      Vec3f(-5.5f, 0.f, -15.f), 3, Vec3f(0.90f, 0.90f, 0.90f), .0, 0.0));
+  spheres.push_back(std::make_unique<Sphere>(Vec3f(0.0f, -10004.f, -20.f),
+                                             10000, Vec3f(0.20f, 0.20f, 0.20f),
+                                             0.0, 0.0));
+  spheres.push_back(std::make_unique<Sphere>(
+      Vec3f(0.0f, 0.f, -20.f), 4, Vec3f(1.00f, 0.32f, 0.36f), 1.f, 1.0f));
+  spheres.push_back(std::make_unique<Sphere>(
+      Vec3f(5.0f, -1.f, -15.f), 2, Vec3f(0.90f, 0.76f, 0.46f), .70, .70));
+  spheres.push_back(std::make_unique<Sphere>(
+      Vec3f(5.0f, 0.f, -25.f), 3, Vec3f(0.65f, 0.77f, 0.97f), .50, .0));
+  spheres.push_back(std::make_unique<Sphere>(
+      Vec3f(-5.5f, 0.f, -15.f), 3, Vec3f(0.10f, 0.10f, 0.10f), .50, 0.0));
+
   // light
   LightsCollection lights;
-  lights.push_back(
-      std::make_unique<PointLight>(Vec3f(-10.0f, 20.f, -30.f), Vec3f(1.f), 2000));
+  lights.push_back(std::make_unique<PointLight>(Vec3f(5.0f, 20.f, -30.f),
+                                                Vec3f(1.f), 2000));
   // lights.push_back(std::make_unique<DistantLight>(
   //   Vec3f(-1.0f, -1.f, -1.f).normalize(), Vec3f(1.f), 1));
 
   auto objGeneration{std::chrono::high_resolution_clock::now()};
 
-  render(spheres, lights, image);
+  Render(spheres, lights, image);
   auto renderTS{std::chrono::high_resolution_clock::now()};
 
-  SaveToFile("./untitled.ppm", image);
+  // SaveToFile("./untitled.ppm", image);
   auto saveTS{std::chrono::high_resolution_clock::now()};
 
   //

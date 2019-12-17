@@ -37,7 +37,7 @@ inline bool rayTriangleIntersect(const Vec3f &orig, const Vec3f &dir,
 
   return (t > 0) ? true : false;
 }
-
+/*
 class TriangleMesh : Object
 {
 public:
@@ -103,7 +103,7 @@ public:
   }
 
   /// Test if the ray interesests this triangle mesh
-  bool intersect(const Vec3f &orig, const Vec3f &dir, Vec3f::type &tNear,
+  bool Intersect(const Vec3f &orig, const Vec3f &dir, Vec3f::type &tNear,
                  uint32_t &triIndex, Vec2f &uv) const override
   {
     auto j{0};
@@ -172,6 +172,6 @@ public:
 };
 
 std::optional<TriangleMesh> LoadPolyMeshFromFile(std::string file,
-                                                 const Matrix44f &o2w);
+                                                 const Matrix44f &o2w);*/
 
 #endif // !TRIANGLE_MESH_H

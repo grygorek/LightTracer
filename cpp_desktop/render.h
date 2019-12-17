@@ -7,10 +7,21 @@
 #include <memory>
 #include <vector>
 
-using ObjectsCollection = std::vector<std::unique_ptr<ObjectSimple>>;
-using LightsCollection  = std::vector<std::unique_ptr<Light>>;
+/// Type definiton of objects that make the scene
+using ObjectsCollection = std::vector<std::unique_ptr<Object>>;
+/// Type definition of lights that are present in the scene
+using LightsCollection = std::vector<std::unique_ptr<Light>>;
 
-void render(const ObjectsCollection &objects, const LightsCollection &lights,
+/// Render scene
+///
+/// Function firstly sets perspective and runs ray traceing algorithm.
+/// It renders given objects with given lights. It saves output scene image
+/// into the provided Image object
+///
+/// @param objects - input objects
+/// @param lights - inputs lights
+/// @param image - output image
+void Render(const ObjectsCollection &objects, const LightsCollection &lights,
             Image &image);
 
 #endif // !SCENE_RENDER_H
