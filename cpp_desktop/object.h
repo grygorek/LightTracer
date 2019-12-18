@@ -4,9 +4,19 @@
 #include "geometry.h"
 #include "material.h"
 
+class Object;
+
+struct IntersectInfo
+{
+  Object *obj{};
+  float hit_distance{kInfinity};
+  int32_t triangle_index;
+  Vec2f uv;
+};
+
 struct Surface
 {
-  uint32_t idx;
+  int32_t idx;
   Vec2f uv;
   Vec3f hit_normal;
   Vec2f hit_texture_coordinates;
@@ -17,11 +27,10 @@ class Object
 {
 public:
   virtual bool Intersect(const Vec3f &ray_org, const Vec3f &ray_dir,
-                         Vec3f::type &hit_dist, uint32_t &index,
-                         Vec2f &uv) const = 0;
+                         IntersectInfo &isecInfo) const = 0;
 
   virtual Surface SurfaceProperties(const Vec3f &hitPoint,
-                                    const Vec3f &viewDirection) const = 0;
+                    const IntersectInfo &isecInfo) const = 0;
 
   virtual ~Object() = default;
 };

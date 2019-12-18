@@ -27,7 +27,7 @@
 HINSTANCE hInst;                     // current instance
 WCHAR szTitle[MAX_LOADSTRING];       // The title bar text
 WCHAR szWindowClass[MAX_LOADSTRING]; // the main window class name
-Image g_image{1024, 768};            // rendered image
+Image g_image{1920, 1080};            // rendered image
 bool g_fImageReady{false};
 
 extern std::unique_ptr<Gdiplus::Bitmap> g_bitmap;
@@ -55,6 +55,39 @@ void DrawImage(HDC &hnd, const Image &image)
 }
 
 void OnPaint(HDC &hnd, Image &image);
+
+int GetEncoderClsid(const WCHAR *format, CLSID *pClsid)
+{
+  using namespace Gdiplus;
+  UINT num  = 0; // number of image encoders
+  UINT size = 0; // size of the image encoder array in bytes
+
+  ImageCodecInfo *pImageCodecInfo = NULL;
+
+  GetImageEncodersSize(&num, &size);
+  if (size == 0)
+    return -1; // Failure
+
+  pImageCodecInfo = (ImageCodecInfo *)(malloc(size));
+  if (pImageCodecInfo == NULL)
+    return -1; // Failure
+
+  GetImageEncoders(num, size, pImageCodecInfo);
+
+  for (UINT j = 0; j < num; ++j)
+  {
+    if (wcscmp(pImageCodecInfo[j].MimeType, format) == 0)
+    {
+      *pClsid = pImageCodecInfo[j].Clsid;
+      free(pImageCodecInfo);
+      return j; // Success
+    }
+  }
+
+  free(pImageCodecInfo);
+  return -1; // Failure
+}
+
 
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
                       _In_opt_ HINSTANCE hPrevInstance, _In_ LPWSTR lpCmdLine,
@@ -113,6 +146,9 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     }
   }
   t.join();
+  CLSID png;
+  if (0 < GetEncoderClsid(L"image/png", &png))
+    g_bitmap->Save(L"out.png", &png);
   g_bitmap = nullptr;
   Gdiplus::GdiplusShutdown(gdiplusToken);
   return (int)msg.wParam;

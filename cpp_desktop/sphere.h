@@ -72,8 +72,7 @@ public:
   }
 #elif 1
   bool Intersect(const Vec3f &ray_orig, const Vec3f &ray_dir,
-                 Vec3f::type &hit_dist, uint32_t &index,
-                 Vec2f &uv) const noexcept override
+                 IntersectInfo &isecInfo) const noexcept override
   {
     // Compute a ray - sphere intersection using the geometric solution
     // https://www.scratchapixel.com/lessons/3d-basic-rendering/minimal-ray-tracer-rendering-simple-shapes/ray-sphere-intersection
@@ -102,7 +101,7 @@ public:
     if (t1 < 0)
       return false;
 
-    hit_dist = t0 < 0 ? t1 : t0;
+    isecInfo.hit_distance = t0 < 0 ? t1 : t0;
 
     return true;
   }
@@ -111,7 +110,7 @@ public:
   // Set surface data such as normal and texture coordinates at a given point on
   // the surface
   Surface SurfaceProperties(const Vec3f &hitPoint,
-                            const Vec3f &viewDirection) const override
+                            const IntersectInfo &isecInfo) const override
   {
     auto hitNormal = (hitPoint - center).normalize();
 

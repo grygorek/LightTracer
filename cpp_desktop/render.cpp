@@ -92,23 +92,20 @@ template <class Objects>
 static auto FindNearestObject(const Vec3f &rayorig, const Vec3f &raydir,
                               const Objects &objects)
 {
-  const Objects::value_type::element_type *pObj{nullptr};
-  float hitNear{INFINITY};
-  uint32_t i;
-  Vec2f uv;
+  IntersectInfo closest;
   for (const auto &obj : objects)
   {
-    float t{INFINITY};
-    if (obj->Intersect(rayorig, raydir, t, i, uv))
+    IntersectInfo info;
+    if (obj->Intersect(rayorig, raydir, info))
     {
-      if (t < hitNear)
+      if (info.hit_distance < closest.hit_distance)
       {
-        hitNear = t;
-        pObj    = obj.get();
+        closest = info;
+        closest.obj = obj.get();
       }
     }
   }
-  return std::make_tuple(pObj, hitNear);
+  return closest;
 }
 
 /// Check if a given ray intersects with a given object
@@ -122,10 +119,8 @@ template <class Object, class Vector>
 bool IsIntersect(const Object &obj, const Vector &ray_origin,
                  const Vector &ray_dir)
 {
-  float t;
-  uint32_t i;
-  Vec2f uv;
-  return obj->Intersect(ray_origin, ray_dir, t, i, uv);
+  IntersectInfo info;
+  return obj->Intersect(ray_origin, ray_dir, info);
 }
 
 /// Shade diffused material
@@ -222,13 +217,13 @@ Vec3f Trace(const Vec3f &rayorig, const Vec3f &raydir,
     return background;
 
   const auto nearestObj = FindNearestObject(rayorig, raydir, objects);
-  const auto obj        = std::get<0>(nearestObj);
+  const auto obj        = nearestObj.obj;
   if (!obj)
     return background;
 
-  const auto phit = rayorig + raydir * std::get<1>(nearestObj);
-  const auto surf = obj->SurfaceProperties(phit, raydir);
-  auto bias       = 1e-4f * surf.hit_normal;
+  const auto phit = rayorig + raydir * nearestObj.hit_distance;
+  const auto surf = obj->SurfaceProperties(phit, nearestObj);
+  auto bias       = 1e-3f * surf.hit_normal;
 
   Vec3f color{};
   if (surf.material->reflection || surf.material->transparency)
@@ -266,7 +261,7 @@ void Render(const ObjectsCollection &objects, const LightsCollection &lights,
 {
   const float invWidth    = 1.f / image.width;
   const float invHeight   = 1.f / image.height;
-  const float fov         = 30.f;
+  const float fov         = 15.f;
   const float aspectratio = image.width / static_cast<float>(image.height);
   const float angle       = static_cast<float>(tan(M_PI * 0.5 * fov / 180.));
 
@@ -279,9 +274,9 @@ void Render(const ObjectsCollection &objects, const LightsCollection &lights,
       {
         float xx = (2 * ((x + 0.5f) * invWidth) - 1) * angle * aspectratio;
         float yy = (1 - 2 * ((y + 0.5f) * invHeight)) * angle;
-        Vec3f raydir(xx, yy, -1);
+        Vec3f raydir(xx, yy-0.35, -1);
         image[pixel] =
-            Trace(Vec3f(.0, .0, 5), raydir.normalize(), objects, lights, 0);
+            Trace(Vec3f(.0, 20.0, 40), raydir.normalize(), objects, lights, 0);
       }
     }
   };
