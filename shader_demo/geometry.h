@@ -204,14 +204,12 @@ public:
 typedef Vec3<float> Vec3f;
 typedef Vec3<int> Vec3i;
 
-//[comment]
-// Implementation of a generic 4x4 Matrix class - Same thing here than with the
-// Vec3 class. It uses a template which is maybe less useful than with vectors
-// but it can be used to define the coefficients of the matrix to be either
-// floats (the most case) or doubles depending on our needs.
-//
-// To use you can either write: Matrix44<float> m; or: Matrix44f m;
-//[/comment]
+/// Implementation of a generic 4x4 Matrix class - Same thing here than with the
+/// Vec3 class. It uses a template which is maybe less useful than with vectors
+/// but it can be used to define the coefficients of the matrix to be either
+/// floats (the most case) or doubles depending on our needs.
+///
+/// To use you can either write: Matrix44<float> m; or: Matrix44f m;
 template <typename T>
 class Matrix44
 {
@@ -254,20 +252,18 @@ public:
     return tmp;
   }
 
-  //[comment]
-  // To make it easier to understand how a matrix multiplication works, the
-  // fragment of code included within the #if-#else statement, show how this
-  // works if you were to iterate over the coefficients of the resulting matrix
-  // (a). However you will often see this multiplication being done using the
-  // code contained within the #else-#end statement. It is exactly the same as
-  // the first fragment only we have litteraly written down as a series of
-  // operations what would actually result from executing the two for() loops
-  // contained in the first fragment. It is supposed to be faster, however
-  // considering matrix multiplicatin is not necessarily that common, this is
-  // probably not super useful nor really necessary (but nice to have -- and it
-  // gives you an example of how it can be done, as this how you will this
-  // operation implemented in most libraries).
-  //[/comment]
+  /// To make it easier to understand how a matrix multiplication works, the
+  /// fragment of code included within the #if-#else statement, show how this
+  /// works if you were to iterate over the coefficients of the resulting matrix
+  /// (a). However you will often see this multiplication being done using the
+  /// code contained within the #else-#end statement. It is exactly the same as
+  /// the first fragment only we have litteraly written down as a series of
+  /// operations what would actually result from executing the two for() loops
+  /// contained in the first fragment. It is supposed to be faster, however
+  /// considering matrix multiplicatin is not necessarily that common, this is
+  /// probably not super useful nor really necessary (but nice to have -- and it
+  /// gives you an example of how it can be done, as this how you will this
+  /// operation implemented in most libraries).
   static void multiply(const Matrix44<T> &a, const Matrix44 &b, Matrix44 &c)
   {
 #if 0
@@ -349,7 +345,7 @@ public:
 #endif
   }
 
-  // \brief transpose itself
+  /// \brief transpose itself
   Matrix44 &transpose()
   {
     Matrix44 tmp(x[0][0], x[1][0], x[2][0], x[3][0], x[0][1], x[1][1], x[2][1],
@@ -360,20 +356,19 @@ public:
     return *this;
   }
 
-  //[comment]
-  // This method needs to be used for point-matrix multiplication. Keep in mind
-  // we don't make the distinction between points and vectors at least from
-  // a programming point of view, as both (as well as normals) are declared as
-  // Vec3. However, mathematically they need to be treated differently. Points
-  // can be translated when translation for vectors is meaningless. Furthermore,
-  // points are implicitly be considered as having homogeneous coordinates. Thus
-  // the w coordinates needs to be computed and to convert the coordinates from
-  // homogeneous back to Cartesian coordinates, we need to divided x, y z by w.
-  //
-  // The coordinate w is more often than not equals to 1, but it can be
-  // different than 1 especially when the matrix is projective matrix
-  // (perspective projection matrix).
-  //[/comment]
+  /// This method needs to be used for point-matrix multiplication. Keep in mind
+  /// we don't make the distinction between points and vectors at least from
+  /// a programming point of view, as both (as well as normals) are declared as
+  /// Vec3. However, mathematically they need to be treated differently. Points
+  /// can be translated when translation for vectors is meaningless.
+  /// Furthermore, points are implicitly be considered as having homogeneous
+  /// coordinates. Thus the w coordinates needs to be computed and to convert
+  /// the coordinates from homogeneous back to Cartesian coordinates, we need to
+  /// divided x, y z by w.
+  ///
+  /// The coordinate w is more often than not equals to 1, but it can be
+  /// different than 1 especially when the matrix is projective matrix
+  /// (perspective projection matrix).
   template <typename S>
   void multVecMatrix(const Vec3<S> &src, Vec3<S> &dst) const
   {
@@ -389,12 +384,10 @@ public:
     dst.z = c / w;
   }
 
-  //[comment]
-  // This method needs to be used for vector-matrix multiplication. Look at the
-  // differences with the previous method (to compute a point-matrix
-  // multiplication). We don't use the coefficients in the matrix that account
-  // for translation (x[3][0], x[3][1], x[3][2]) and we don't compute w.
-  //[/comment]
+  /// This method needs to be used for vector-matrix multiplication. Look at the
+  /// differences with the previous method (to compute a point-matrix
+  /// multiplication). We don't use the coefficients in the matrix that account
+  /// for translation (x[3][0], x[3][1], x[3][2]) and we don't compute w.
   template <typename S>
   void multDirMatrix(const Vec3<S> &src, Vec3<S> &dst) const
   {
@@ -409,17 +402,17 @@ public:
     dst.z = c;
   }
 
-  //[comment]
-  // Compute the inverse of the matrix using the Gauss-Jordan (or reduced row)
-  // elimination method. We didn't explain in the lesson on Geometry how the
-  // inverse of matrix can be found. Don't worry at this point if you don't
-  // understand how this works. But we will need to be able to compute the
-  // inverse of matrices in the first lessons of the "Foundation of 3D
-  // Rendering" section, which is why we've added this code. For now, you can
-  // just use it and rely on it for doing what it's supposed to do. If you want
-  // to learn how this works though, check the lesson on called Matrix Inverse
-  // in the "Mathematics and Physics of Computer Graphics" section.
-  //[/comment]
+  /// @brief Compute the inverse of the matrix using the Gauss-Jordan (or
+  /// reduced row) elimination method.
+  ///
+  /// We didn't explain in the lesson on Geometry how the
+  /// inverse of matrix can be found. Don't worry at this point if you don't
+  /// understand how this works. But we will need to be able to compute the
+  /// inverse of matrices in the first lessons of the "Foundation of 3D
+  /// Rendering" section, which is why we've added this code. For now, you can
+  /// just use it and rely on it for doing what it's supposed to do. If you want
+  /// to learn how this works though, check the lesson on called Matrix Inverse
+  /// in the "Mathematics and Physics of Computer Graphics" section.
   Matrix44 inverse() const
   {
     int i, j, k;
@@ -516,7 +509,7 @@ public:
     return s;
   }
 
-  // \brief set current matrix to its inverse
+  /// \brief set current matrix to its inverse
   const Matrix44<T> &invert()
   {
     *this = inverse();
