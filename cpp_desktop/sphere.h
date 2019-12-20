@@ -31,15 +31,29 @@ public:
   Vec3f center;                /// position of the sphere
   Vec3f::type radius, radius2; /// sphere radius and radius^2
   Material material;
+
+  Sphere(const Matrix44f &obj2world, float radius_, const Vec3f &surfaceColor_,
+         Vec3f::type reflection_ = 0, Vec3f::type transparency_ = 0) noexcept
+      : Object(obj2world)
+      , radius(radius_)
+      , radius2(radius * radius)
+      , material{surfaceColor_, transparency_, reflection_,
+                 transparency_ > 0 ? 1.5f : 1.f}
+  {
+    obj2world.multVecMatrix(Vec3f(0), center);
+  }
+
   Sphere(const Vec3f &center_, float radius_, const Vec3f &surfaceColor_,
          Vec3f::type reflection_ = 0, Vec3f::type transparency_ = 0) noexcept
-      : center(center_)
+      : Object(IdentityMtx44f)
+      , center(center_)
       , radius(radius_)
       , radius2(radius * radius)
       , material{surfaceColor_, transparency_, reflection_,
                  transparency_ > 0 ? 1.5f : 1.f}
   { /* empty */
   }
+
 #if 0
   bool intersect(const Vec3f &ray_org, const Vec3f &ray_dir,
                  Vec3f::type &hit_dist, uint32_t &index,

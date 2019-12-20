@@ -207,6 +207,29 @@ inline Vec3<float> operator*(float f, const Vec3<float> &v)
 using Vec3f = Vec3<float>;
 using Vec3d = Vec3<double>;
 
+template <class T>
+struct Vec4 : public Vec3<T>
+{
+  Vec4(T v)
+      : Vec3<T>(v)
+  {
+  }
+
+  Vec4(T x, T y, T z, T ww = 1)
+      : Vec3<T>(x, y, z)
+      , w(ww)
+  {
+  }
+
+  Vec4(Vec3<T> v, T ww = 1)
+      : Vec3<T>(v)
+      , w(ww)
+  {
+  }
+
+  T w = 1;
+};
+
 /// Implementation of a generic 4x4 Matrix class - Same thing here than with the
 /// Vec3 class. It uses a template which is maybe less useful than with vectors
 /// but it can be used to define the coefficients of the matrix to be either
@@ -266,7 +289,7 @@ public:
   /// probably not super useful nor really necessary (but nice to have -- and it
   /// gives you an example of how it can be done, as this how you will this
   /// operation implemented in most libraries).
-  static void multiply(const Matrix44<T> &a, const Matrix44 &b, Matrix44 &c)
+  static void multiply(const Matrix44 &a, const Matrix44 &b, Matrix44 &c)
   {
 #if 0
         for (uint8_t i = 0; i < 4; ++i) {
@@ -362,10 +385,11 @@ public:
   /// we don't make the distinction between points and vectors at least from
   /// a programming point of view, as both (as well as normals) are declared as
   /// Vec3. However, mathematically they need to be treated differently. Points
-  /// can be translated when translation for vectors is meaningless. Furthermore,
-  /// points are implicitly be considered as having homogeneous coordinates. Thus
-  /// the w coordinates needs to be computed and to convert the coordinates from
-  /// homogeneous back to Cartesian coordinates, we need to divided x, y z by w.
+  /// can be translated when translation for vectors is meaningless.
+  /// Furthermore, points are implicitly be considered as having homogeneous
+  /// coordinates. Thus the w coordinates needs to be computed and to convert
+  /// the coordinates from homogeneous back to Cartesian coordinates, we need to
+  /// divided x, y z by w.
   ///
   /// The coordinate w is more often than not equals to 1, but it can be
   /// different than 1 especially when the matrix is projective matrix
@@ -373,16 +397,22 @@ public:
   template <typename S>
   void multVecMatrix(const Vec3<S> &src, Vec3<S> &dst) const
   {
-    S a, b, c, w;
-
-    a = src[0] * x[0][0] + src[1] * x[1][0] + src[2] * x[2][0] + x[3][0];
-    b = src[0] * x[0][1] + src[1] * x[1][1] + src[2] * x[2][1] + x[3][1];
-    c = src[0] * x[0][2] + src[1] * x[1][2] + src[2] * x[2][2] + x[3][2];
-    w = src[0] * x[0][3] + src[1] * x[1][3] + src[2] * x[2][3] + x[3][3];
+    S a = src[0] * x[0][0] + src[1] * x[1][0] + src[2] * x[2][0] + x[3][0];
+    S b = src[0] * x[0][1] + src[1] * x[1][1] + src[2] * x[2][1] + x[3][1];
+    S c = src[0] * x[0][2] + src[1] * x[1][2] + src[2] * x[2][2] + x[3][2];
+    S w = src[0] * x[0][3] + src[1] * x[1][3] + src[2] * x[2][3] + x[3][3];
 
     dst.x = a / w;
     dst.y = b / w;
     dst.z = c / w;
+  }
+
+  template <typename S>
+  Vec3<S> multVecMatrix(const Vec3<S> &src) const
+  {
+    Vec3<S> dir;
+    multVecMatrix(src, dir);
+    return dir;
   }
 
   /// This method needs to be used for vector-matrix multiplication. Look at the
@@ -401,6 +431,14 @@ public:
     dst.x = a;
     dst.y = b;
     dst.z = c;
+  }
+
+  template <typename S>
+  Vec3<S> multDirMatrix(const Vec3<S> &src) const
+  {
+    Vec3<S> dir;
+    multDirMatrix(src, dir);
+    return dir;
   }
 
   /// Compute the inverse of the matrix using the Gauss-Jordan (or reduced row)
@@ -556,15 +594,15 @@ constexpr Matrix44f IdentityMtx44f;
 /// @param to - target position
 /// @param worldUp - up axis of the world; it will define roll of the view
 /// @returns 4x4 matrix camera orientation matrix
-template <class V3>
-Matrix44<typename V3::type_name> LookAt(const V3 &from, const V3 &to,
-                                        const V3 &worldUp = V3(0, 1, 0))
+template <class T>
+Matrix44<T> LookAt(const Vec3<T> &from, const Vec3<T> &to,
+                   const Vec3<T> &worldUp = Vec3<T>(0, 1, 0))
 {
-  V3 forward = (from - to).normalize();
-  V3 right   = worldUp.normalize().cross(forward);
-  V3 up      = forward.cross(right);
+  auto forward = (from - to).normalize();
+  auto right   = worldUp.cross(forward).normalize();
+  auto up      = forward.cross(right);
 
-  Matrix44<typename V3::type_name> camToWorld;
+  Matrix44<T> camToWorld;
 
   camToWorld[0][0] = right.x;
   camToWorld[0][1] = right.y;
@@ -584,15 +622,34 @@ Matrix44<typename V3::type_name> LookAt(const V3 &from, const V3 &to,
 }
 
 template <class Numeric>
-Numeric deg2rad(Numeric deg)
+Numeric radians(Numeric deg)
 {
   return static_cast<Numeric>(deg * M_PI / 180);
+}
+
+template <class Numeric>
+Numeric degrees(Numeric rad)
+{
+  return static_cast<Numeric>(rad * 180 / M_PI);
 }
 
 template <class Numeric>
 float clamp(Numeric lo, Numeric hi, Numeric v)
 {
   return std::max(lo, std::min(hi, v));
+}
+
+template <class S>
+Matrix44<S> TranslateMat(const Vec4<S> &translateVec)
+{
+  return Matrix44<S>{1, 0, 0, translateVec.x, 0, 1, 0, translateVec.y,
+                     0, 0, 1, translateVec.z, 0, 0, 0, translateVec.w};
+}
+
+template <class S>
+Matrix44<S> TranslateMat(const Vec3<S> &translateVec, S ww = 1)
+{
+  return TranslateMat(Vec4<S>(translateVec, ww));
 }
 
 #endif

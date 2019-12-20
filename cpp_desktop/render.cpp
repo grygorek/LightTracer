@@ -16,14 +16,6 @@
 
 constexpr int MAX_RAY_DEPTH = 15;
 
-/// Clamp the value between lo and hi
-///
-///    lo <= v <= hi
-inline float clamp(float lo, float hi, float v)
-{
-  return std::max(lo, std::min(hi, v));
-}
-
 /// Fresnel factor for non metalic object using Snell's law algirithm
 ///
 /// @param raydir - direction of source ray
@@ -33,10 +25,10 @@ inline float clamp(float lo, float hi, float v)
 ///     air is considered as default environemnt (ior = 1)
 /// @returns Fresnel factor of a reflection vector (kr); as a consequence
 ///    the factor for refraction vector is (1-kr)
-float fresnel_non_metalic(const Vec3f &raydir, const Vec3f &hit_normal,
-                          float ior, float ior_environment = 1.f)
+float FresnelNonMetalic(const Vec3f &raydir, const Vec3f &hit_normal, float ior,
+                        float ior_environment = 1.f)
 {
-  float cosi = clamp(-1, 1, raydir.dot(hit_normal));
+  float cosi = clamp(-1.f, 1.f, raydir.dot(hit_normal));
   float etai = ior_environment, etat = ior;
   if (cosi > 0)
   {
@@ -72,7 +64,7 @@ float fresnel_non_metalic(const Vec3f &raydir, const Vec3f &hit_normal,
 /// @param mediumRefrIdx - index of refracton of material
 /// @param ray2hitNormal - dot product of source ray and normal at a hit point
 /// @returns Fresnel factor
-static float fresnel_non_metalic(float mediumRefrIdx, float ray2hitNormal)
+static float FresnelNonMetalic(float mediumRefrIdx, float ray2hitNormal)
 {
   // Schlick approximation of fresnel effect
   // https: // en.wikipedia.org/wiki/Schlick%27s_approximation
@@ -100,7 +92,7 @@ static auto FindNearestObject(const Vec3f &rayorig, const Vec3f &raydir,
     {
       if (info.hit_distance < closest.hit_distance)
       {
-        closest = info;
+        closest     = info;
         closest.obj = obj.get();
       }
     }
@@ -235,7 +227,7 @@ Vec3f Trace(const Vec3f &rayorig, const Vec3f &raydir,
 
     if (surf.material->transparency)
     {
-      k = fresnel_non_metalic(raydir, surf.hit_normal, surf.material->ior);
+      k = FresnelNonMetalic(raydir, surf.hit_normal, surf.material->ior);
       if (k < 1)
       { // k==1: all internal reflection, no need to calculate refraction
         auto transmDir =
@@ -256,14 +248,31 @@ Vec3f Trace(const Vec3f &rayorig, const Vec3f &raydir,
          surf.material->reflection * color;
 }
 
-void Render(const ObjectsCollection &objects, const LightsCollection &lights,
-            Image &image)
+/// Generate single image
+///
+/// @param view - view point and direction
+/// @param objects - scene objectes
+/// @param lights - scene lights
+/// @param image - output image
+void Render(const View &view, const ObjectsCollection &objects,
+            const LightsCollection &lights, Image &image)
 {
+  enum Zaxis
+  {
+    /// Zaxis is towards the screen (compatible with OpenGL)
+    towardsScreen = -1,
+
+    /// Zaxis is towards you
+    towardsYou = 1
+  };
+
   const float invWidth    = 1.f / image.width;
   const float invHeight   = 1.f / image.height;
   const float fov         = 15.f;
   const float aspectratio = image.width / static_cast<float>(image.height);
-  const float angle       = static_cast<float>(tan(M_PI * 0.5 * fov / 180.));
+  const auto scale        = tanf(radians(0.5f * fov));
+
+  auto lookAt = LookAt(view.eye, view.dir);
 
   auto trace_piece = [&](int height_begin, int height_end) {
     // Trace rays
@@ -272,25 +281,27 @@ void Render(const ObjectsCollection &objects, const LightsCollection &lights,
     {
       for (auto x{0}; x < image.width; ++x, ++pixel)
       {
-        float xx = (2 * ((x + 0.5f) * invWidth) - 1) * angle * aspectratio;
-        float yy = (1 - 2 * ((y + 0.5f) * invHeight)) * angle;
-        Vec3f raydir(xx, yy-0.35, -1);
-        image[pixel] =
-            Trace(Vec3f(.0, 20.0, 40), raydir.normalize(), objects, lights, 0);
+        float xx = (2 * ((x + 0.5f) * invWidth) - 1) * scale * aspectratio;
+        float yy = (1 - 2 * ((y + 0.5f) * invHeight)) * scale;
+        Vec3f raydir(xx, yy, Zaxis::towardsScreen);
+        raydir = lookAt.multDirMatrix(raydir);
+
+        image[pixel] = Trace(view.eye, raydir.normalize(), objects, lights, 0);
       }
     }
   };
 
+  // single thread
   // trace_piece(0, image.height);
 
   // Split tracing in multiple threads
-  constexpr int n = 8;
-  auto a0 = std::async(trace_piece, image.height / n * 0, image.height / n * 1);
-  auto a1 = std::async(trace_piece, image.height / n * 1, image.height / n * 2);
-  auto a2 = std::async(trace_piece, image.height / n * 2, image.height / n * 3);
-  auto a3 = std::async(trace_piece, image.height / n * 3, image.height / n * 4);
-  auto a4 = std::async(trace_piece, image.height / n * 4, image.height / n * 5);
-  auto a5 = std::async(trace_piece, image.height / n * 5, image.height / n * 6);
-  auto a6 = std::async(trace_piece, image.height / n * 6, image.height / n * 7);
-  auto a7 = std::async(trace_piece, image.height / n * 7, image.height / n * 8);
+  const int n = std::thread::hardware_concurrency() * 2;
+  auto rem    = image.height / n;
+  auto last   = image.height - rem * n;
+  std::vector<std::future<void>> tasks(n + (last > 0));
+  if (last)
+    tasks[n] = std::async(trace_piece, image.height - last, image.height);
+  for (auto i{0}; i < n; i++)
+    tasks[i] = std::async(trace_piece, image.height / n * i,
+                          image.height / n * (i + 1));
 }

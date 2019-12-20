@@ -21,7 +21,7 @@ inline void triangle_test()
   Vec3f cols[3]          = {{0.6f, 0.4f, 0.1f}, {0.1f, 0.5f, 0.3f}, {0.1f, 0.3f, 0.7f}};
   Image pix(width, height);
   float fov              = 51.52f;
-  float scale            = tanf(deg2rad(fov * 0.5f));
+  float scale            = tanf(radians(fov * 0.5f));
   float imageAspectRatio = width / (float)height;
   Vec3f orig(0);
   int pixIdx{};

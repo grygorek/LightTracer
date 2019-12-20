@@ -2,7 +2,7 @@
 
 WINDOWPLACEMENT g_wpPrev = {sizeof(g_wpPrev)};
 
-void WndRestore(const HWND &hwnd, const DWORD &dwStyle)
+void WndRestore(HWND hwnd, DWORD dwStyle)
 {
   SetWindowLong(hwnd, GWL_STYLE, dwStyle | WS_OVERLAPPEDWINDOW);
   SetWindowPlacement(hwnd, &g_wpPrev);
@@ -11,7 +11,7 @@ void WndRestore(const HWND &hwnd, const DWORD &dwStyle)
                    SWP_FRAMECHANGED);
 }
 
-void WndResizeFullScreen(const HWND &hwnd, const DWORD &dwStyle)
+void WndResizeFullScreen(HWND hwnd, DWORD dwStyle)
 {
   MONITORINFO mi = {sizeof(mi)};
   if (GetWindowPlacement(hwnd, &g_wpPrev) &&

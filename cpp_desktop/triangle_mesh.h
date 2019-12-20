@@ -63,7 +63,7 @@ public:
                const std::vector<uint32_t> &vertsIndex,
                const std::vector<Vec3f> &verts,
                const std::vector<Vec3f> &normals, const std::vector<Vec2f> &st)
-      : objectToWorld(o2w)
+      : Object(o2w)
       , numTris(0)
       , material{Vec3f(.5f), 0, 0}
   {
@@ -83,7 +83,7 @@ public:
     for (uint32_t i = 0; i < maxVertIndex; ++i)
     {
       // Transforming vertices to world space
-      objectToWorld.multVecMatrix(verts[i], P[i]);
+      P[i] = objectToWorld.multVecMatrix(verts[i]);
     }
 
     trisIndex.resize(numTris * 3);
@@ -104,9 +104,10 @@ public:
         trisIndex[l + 2] = vertsIndex[k + j + 2];
 
         // Transforming normals
-        transformNormals.multDirMatrix(normals[k], N[l]);
-        transformNormals.multDirMatrix(normals[k + j + 1], N[l + 1]);
-        transformNormals.multDirMatrix(normals[k + j + 2], N[l + 2]);
+        N[l + 0] = transformNormals.multDirMatrix(normals[k]);
+        N[l + 1] = transformNormals.multDirMatrix(normals[k + j + 1]);
+        N[l + 2] = transformNormals.multDirMatrix(normals[k + j + 2]);
+
         N[l].normalize();
         N[l + 1].normalize();
         N[l + 2].normalize();
@@ -185,7 +186,6 @@ public:
   }
 
   // member variables
-  Matrix44f objectToWorld, worldToObject;
   int numTris;                     // number of triangles
   std::vector<Vec3f> P;            // triangles vertex position
   std::vector<uint32_t> trisIndex; // vertex index array

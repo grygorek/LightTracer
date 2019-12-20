@@ -26,6 +26,14 @@ struct Surface
 class Object
 {
 public:
+  Object() = default;
+
+  Object(const Matrix44f &obj2world) noexcept
+      : objectToWorld(obj2world)
+      , worldToObject(obj2world.inverse())
+  {
+  }
+
   virtual bool Intersect(const Vec3f &ray_org, const Vec3f &ray_dir,
                          IntersectInfo &isecInfo) const = 0;
 
@@ -33,33 +41,8 @@ public:
                     const IntersectInfo &isecInfo) const = 0;
 
   virtual ~Object() = default;
-};
 
-// class Object
-//{
-// public:
-//  /// Setting up the object-to-world and world-to-object matrix
-//  Object(const Matrix44f &o2w, const char *name_ = nullptr)
-//      : objectToWorld(o2w)
-//      , worldToObject(o2w.inverse())
-//      , name{name_}
-//  {
-//  }
-//
-//  virtual ~Object() = default;
-//
-//  virtual bool intersect(const Vec3f &ray_org, const Vec3f &ray_dir,
-//                         Vec3f::type &hit_dist, uint32_t &index,
-//                         Vec2f &uv) const = 0;
-//
-//  virtual void SurfaceProperties(const Vec3f &, const Vec3f &, uint32_t,
-//                                 const Vec2f &, Vec3f &, Vec2f &) const = 0;
-//
-//  Matrix44f objectToWorld, worldToObject;
-//  const char *name;
-//  MaterialType type = MaterialType::kDiffuse;
-//  float ior         = 1.f;
-//  Vec3f albedo      = 0.18f;
-//};
+  Matrix44f objectToWorld, worldToObject;
+};
 
 #endif // !BASE_GEOMETRY_OBJECT_H

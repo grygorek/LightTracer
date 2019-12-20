@@ -3,8 +3,7 @@
 #include <windows.h>
 #include <gdiplus.h>
 #include <objidl.h>
-#pragma comment(lib, "Gdiplus.lib")
-#include "framework.h"
+//#include "framework.h"
 
 // remove windows crap
 #ifdef min
@@ -19,6 +18,8 @@
 #include "triangle_test.h"
 
 #include <thread>
+
+#pragma comment(lib, "Gdiplus.lib")
 
 #define MAX_LOADSTRING 100
 #define WM_REDRAW (WM_USER + 1)

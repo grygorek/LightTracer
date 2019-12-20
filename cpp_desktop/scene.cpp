@@ -10,6 +10,32 @@
 #include <sstream>
 #include <vector>
 
+/// World coordinates are consistent with OpenGL
+///
+///  Front, -Z-axis is deep into screen
+///  Front, +Z-axis is pointing to you
+///
+///   Y
+///   ^
+///   |
+///   |----> X
+///
+///
+///  Looking down from the top, +Y-axis is pointing to you
+///
+///   -Z
+///   ^
+///   |
+///   |----> X
+///
+///
+///  Looking from right to left, +X-axis is pointing to you
+///
+///   Y
+///   ^
+///   |
+///   |----> -Z
+
 /// In the main function, we will create the scene which is composed of 5
 /// spheres and 1 light (which is also a sphere). Then, once the scene
 /// description is complete we render that scene, by calling the render()
@@ -25,6 +51,7 @@ void scene_spheres(Image &image)
   spheres.push_back(std::make_unique<Sphere>(Vec3f(0.0f, -10004.f, -20.f),
                                              10000, Vec3f(0.20f, 0.20f, 0.20f),
                                              0.0, 0.0));
+
   spheres.push_back(std::make_unique<Sphere>(
       Vec3f(0.0f, 0.f, -20.f), 4, Vec3f(1.00f, 0.32f, 0.36f), 1.f, 1.0f));
   spheres.push_back(std::make_unique<Sphere>(
@@ -43,7 +70,8 @@ void scene_spheres(Image &image)
 
   auto objGeneration{std::chrono::high_resolution_clock::now()};
 
-  Render(spheres, lights, image);
+  Render(View{Vec3f{0.f, 20.f, 40.f}, Vec3f(0, -0.5, -20)}, spheres, lights,
+         image);
   auto renderTS{std::chrono::high_resolution_clock::now()};
 
   // SaveToFile("./untitled.ppm", image);
@@ -80,7 +108,7 @@ void scene_mesh(Image &image)
 
   auto start{std::chrono::high_resolution_clock::now()};
 
-  auto mesh{LoadPolyMeshFromFile("./geometry/backdrop.geo", IdentityMtx44f)};
+  auto mesh{LoadPolyMeshFromFile("./geometry/glasses.geo", IdentityMtx44f)};
   auto tt = DeltaTimeMilisec(std::chrono::high_resolution_clock::now(), start);
   if (!mesh)
   {
@@ -102,7 +130,8 @@ void scene_mesh(Image &image)
 
   auto objGeneration{std::chrono::high_resolution_clock::now()};
 
-  Render(objects, lights, image);
+  Render(View{Vec3f{0.f, 0.f, 40.f}, Vec3f{0.f, 0.f, -1}}, objects, lights,
+         image);
   auto renderTS{std::chrono::high_resolution_clock::now()};
 
   // SaveToFile("./untitled.ppm", image);
