@@ -53,14 +53,8 @@ public:
     x *= r, y *= r;
     return *this;
   }
-  friend std::ostream &operator<<(std::ostream &s, const Vec2<T> &v)
-  {
-    return s << '[' << v.x << ' ' << v.y << ']';
-  }
-  friend Vec2 operator*(T r, const Vec2<T> &v)
-  {
-    return Vec2(v.x * r, v.y * r);
-  }
+  friend std::ostream &operator<<(std::ostream &s, const Vec2<T> &v) { return s << '[' << v.x << ' ' << v.y << ']'; }
+  friend Vec2 operator*(T r, const Vec2<T> &v) { return Vec2(v.x * r, v.y * r); }
   T x, y;
 };
 
@@ -153,30 +147,15 @@ public:
   }
 
   Vec3<T> operator*(T f) const { return Vec3<T>(x * f, y * f, z * f); }
-  Vec3<T> operator*(const Vec3<T> &v) const
-  {
-    return Vec3<T>(x * v.x, y * v.y, z * v.z);
-  }
+  Vec3<T> operator*(const Vec3<T> &v) const { return Vec3<T>(x * v.x, y * v.y, z * v.z); }
 
   Vec3 operator/(T f) const { return Vec3(x / f, y / f, z / f); }
-  Vec3 operator/(const Vec3 &f) const
-  {
-    return Vec3(x / f.x, y / f.y, z / f.z);
-  }
+  Vec3 operator/(const Vec3 &f) const { return Vec3(x / f.x, y / f.y, z / f.z); }
 
   T dot(const Vec3<T> &v) const { return x * v.x + y * v.y + z * v.z; }
-  Vec3 cross(const Vec3<T> &v) const
-  {
-    return Vec3(y * v.z - z * v.y, z * v.x - x * v.z, x * v.y - y * v.x);
-  }
-  Vec3<T> operator-(const Vec3<T> &v) const
-  {
-    return Vec3<T>(x - v.x, y - v.y, z - v.z);
-  }
-  Vec3<T> operator+(const Vec3<T> &v) const
-  {
-    return Vec3<T>(x + v.x, y + v.y, z + v.z);
-  }
+  Vec3 cross(const Vec3<T> &v) const { return Vec3(y * v.z - z * v.y, z * v.x - x * v.z, x * v.y - y * v.x); }
+  Vec3<T> operator-(const Vec3<T> &v) const { return Vec3<T>(x - v.x, y - v.y, z - v.z); }
+  Vec3<T> operator+(const Vec3<T> &v) const { return Vec3<T>(x + v.x, y + v.y, z + v.z); }
   Vec3<T> &operator+=(const Vec3<T> &v)
   {
     x += v.x, y += v.y, z += v.z;
@@ -244,8 +223,7 @@ public:
 
   Matrix44() = default;
 
-  Matrix44(T a, T b, T c, T d, T e, T f, T g, T h, T i, T j, T k, T l, T m, T n,
-           T o, T p)
+  Matrix44(T a, T b, T c, T d, T e, T f, T g, T h, T i, T j, T k, T l, T m, T n, T o, T p)
   {
     x[0][0] = a;
     x[0][1] = b;
@@ -364,19 +342,16 @@ public:
 
         return t;
 #else
-    return Matrix44(x[0][0], x[1][0], x[2][0], x[3][0], x[0][1], x[1][1],
-                    x[2][1], x[3][1], x[0][2], x[1][2], x[2][2], x[3][2],
-                    x[0][3], x[1][3], x[2][3], x[3][3]);
+    return Matrix44(x[0][0], x[1][0], x[2][0], x[3][0], x[0][1], x[1][1], x[2][1], x[3][1], x[0][2], x[1][2], x[2][2],
+                    x[3][2], x[0][3], x[1][3], x[2][3], x[3][3]);
 #endif
   }
 
   /// \brief transpose itself
   Matrix44 &transpose()
   {
-    Matrix44 tmp(x[0][0], x[1][0], x[2][0], x[3][0], x[0][1], x[1][1], x[2][1],
-                 x[3][1], x[0][2], x[1][2], x[2][2], x[3][2], x[0][3], x[1][3],
-                 x[2][3], x[3][3]);
-    *this = tmp;
+    *this = Matrix44(x[0][0], x[1][0], x[2][0], x[3][0], x[0][1], x[1][1], x[2][1], x[3][1], x[0][2], x[1][2], x[2][2],
+                     x[3][2], x[0][3], x[1][3], x[2][3], x[3][3]);
 
     return *this;
   }
@@ -557,27 +532,23 @@ public:
   {
     std::ios_base::fmtflags oldFlags = s.flags();
     int width                        = 12; // total with of the displayed number
-    s.precision(5); // control the number of displayed decimals
+    s.precision(5);                        // control the number of displayed decimals
     s.setf(std::ios_base::fixed);
 
-    s << "[" << std::setw(width) << m[0][0] << " " << std::setw(width)
-      << m[0][1] << " " << std::setw(width) << m[0][2] << " "
-      << std::setw(width) << m[0][3] << "\n"
+    s << "[" << std::setw(width) << m[0][0] << " " << std::setw(width) << m[0][1] << " " << std::setw(width) << m[0][2]
+      << " " << std::setw(width) << m[0][3] << "\n"
       <<
 
-        " " << std::setw(width) << m[1][0] << " " << std::setw(width) << m[1][1]
-      << " " << std::setw(width) << m[1][2] << " " << std::setw(width)
-      << m[1][3] << "\n"
+        " " << std::setw(width) << m[1][0] << " " << std::setw(width) << m[1][1] << " " << std::setw(width) << m[1][2]
+      << " " << std::setw(width) << m[1][3] << "\n"
       <<
 
-        " " << std::setw(width) << m[2][0] << " " << std::setw(width) << m[2][1]
-      << " " << std::setw(width) << m[2][2] << " " << std::setw(width)
-      << m[2][3] << "\n"
+        " " << std::setw(width) << m[2][0] << " " << std::setw(width) << m[2][1] << " " << std::setw(width) << m[2][2]
+      << " " << std::setw(width) << m[2][3] << "\n"
       <<
 
-        " " << std::setw(width) << m[3][0] << " " << std::setw(width) << m[3][1]
-      << " " << std::setw(width) << m[3][2] << " " << std::setw(width)
-      << m[3][3] << "]";
+        " " << std::setw(width) << m[3][0] << " " << std::setw(width) << m[3][1] << " " << std::setw(width) << m[3][2]
+      << " " << std::setw(width) << m[3][3] << "]";
 
     s.flags(oldFlags);
     return s;
@@ -586,40 +557,6 @@ public:
 
 typedef Matrix44<float> Matrix44f;
 constexpr Matrix44f IdentityMtx44f;
-
-/// Generate a view (camera) orientation matrix
-///
-/// @tparam V3 - 3d coordination vector
-/// @param from - viewer/camera position
-/// @param to - target position
-/// @param worldUp - up axis of the world; it will define roll of the view
-/// @returns 4x4 matrix camera orientation matrix
-template <class T>
-Matrix44<T> LookAt(const Vec3<T> &from, const Vec3<T> &to,
-                   const Vec3<T> &worldUp = Vec3<T>(0, 1, 0))
-{
-  auto forward = (from - to).normalize();
-  auto right   = worldUp.cross(forward).normalize();
-  auto up      = forward.cross(right);
-
-  Matrix44<T> camToWorld;
-
-  camToWorld[0][0] = right.x;
-  camToWorld[0][1] = right.y;
-  camToWorld[0][2] = right.z;
-  camToWorld[1][0] = up.x;
-  camToWorld[1][1] = up.y;
-  camToWorld[1][2] = up.z;
-  camToWorld[2][0] = forward.x;
-  camToWorld[2][1] = forward.y;
-  camToWorld[2][2] = forward.z;
-
-  camToWorld[3][0] = from.x;
-  camToWorld[3][1] = from.y;
-  camToWorld[3][2] = from.z;
-
-  return camToWorld;
-}
 
 template <class Numeric>
 Numeric radians(Numeric deg)
@@ -652,4 +589,51 @@ Matrix44<S> TranslateMat(const Vec3<S> &translateVec, S ww = 1)
   return TranslateMat(Vec4<S>(translateVec, ww));
 }
 
+/// Generate a view (camera) orientation matrix
+///
+/// @tparam V3 - 3d coordination vector
+/// @param from - viewer/camera position
+/// @param to - target position
+/// @param worldUp - up axis of the world; it will define roll of the view
+/// @returns 4x4 matrix camera orientation matrix
+template <class T>
+Matrix44<T> LookAt(const Vec3<T> &from, const Vec3<T> &to, const Vec3<T> &worldUp = Vec3<T>(0, 1, 0))
+{
+  auto forward = (from - to).normalize();
+  auto right   = worldUp.cross(forward).normalize();
+  auto up      = forward.cross(right);
+
+  Matrix44<T> camToWorld;
+
+  camToWorld[0][0] = right.x;
+  camToWorld[0][1] = right.y;
+  camToWorld[0][2] = right.z;
+  camToWorld[1][0] = up.x;
+  camToWorld[1][1] = up.y;
+  camToWorld[1][2] = up.z;
+  camToWorld[2][0] = forward.x;
+  camToWorld[2][1] = forward.y;
+  camToWorld[2][2] = forward.z;
+
+  camToWorld[3][0] = from.x;
+  camToWorld[3][1] = from.y;
+  camToWorld[3][2] = from.z;
+
+  return camToWorld;
+}
+
+template <class T>
+Matrix44<T> ProjectionMatrix(T angleOfView, T close, T far_away)
+{
+  T scale = 1 / tan(radians(angleOfView) * 0.5);
+  Matrix44<T> M;
+  // set the basic projection matrix
+  M[0][0] = scale;                                  // scale the x coordinates of the projected point
+  M[1][1] = scale;                                  // scale the y coordinates of the projected point
+  M[2][2] = -far_away / (far_away - close);         // used to remap z to [0,1]
+  M[3][2] = -far_away * close / (far_away - close); // used to remap z [0,1]
+  M[2][3] = -1;                                     // set w = -z
+  M[3][3] = 0;
+  return M;
+}
 #endif

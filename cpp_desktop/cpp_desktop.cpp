@@ -3,21 +3,19 @@
 #include <windows.h>
 #include <gdiplus.h>
 #include <objidl.h>
-//#include "framework.h"
 
 // remove windows crap
 #ifdef min
 #undef min
 #endif
 
+#include <thread>
 #include "cpp_desktop.h"
 #include "display_state.h"
 #include "image.h"
 #include "scene.h"
 #include "triangle_mesh.h"
 #include "triangle_test.h"
-
-#include <thread>
 
 #pragma comment(lib, "Gdiplus.lib")
 
@@ -28,11 +26,10 @@
 HINSTANCE hInst;                     // current instance
 WCHAR szTitle[MAX_LOADSTRING];       // The title bar text
 WCHAR szWindowClass[MAX_LOADSTRING]; // the main window class name
-Image g_image{1920, 1080};            // rendered image
+Image g_image{1920, 1080};           // rendered image
 bool g_fImageReady{false};
 
-extern std::unique_ptr<Gdiplus::Bitmap> g_bitmap;
-
+extern std::unique_ptr<Gdiplus::Bitmap> g_bitmap; // see win_drawing.cpp
 
 // Forward declarations of functions included in this code module:
 ATOM MyRegisterClass(HINSTANCE hInstance);
@@ -63,41 +60,33 @@ int GetEncoderClsid(const WCHAR *format, CLSID *pClsid)
   UINT num  = 0; // number of image encoders
   UINT size = 0; // size of the image encoder array in bytes
 
-  ImageCodecInfo *pImageCodecInfo = NULL;
-
   GetImageEncodersSize(&num, &size);
   if (size == 0)
     return -1; // Failure
 
-  pImageCodecInfo = (ImageCodecInfo *)(malloc(size));
-  if (pImageCodecInfo == NULL)
+  auto pImageCodecInfo = std::make_unique<ImageCodecInfo[]>(size);
+  if (pImageCodecInfo == nullptr)
     return -1; // Failure
 
-  GetImageEncoders(num, size, pImageCodecInfo);
+  GetImageEncoders(num, size, pImageCodecInfo.get());
 
   for (UINT j = 0; j < num; ++j)
   {
     if (wcscmp(pImageCodecInfo[j].MimeType, format) == 0)
     {
       *pClsid = pImageCodecInfo[j].Clsid;
-      free(pImageCodecInfo);
       return j; // Success
     }
   }
 
-  free(pImageCodecInfo);
   return -1; // Failure
 }
 
-
-int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
-                      _In_opt_ HINSTANCE hPrevInstance, _In_ LPWSTR lpCmdLine,
+int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPWSTR lpCmdLine,
                       _In_ int nCmdShow)
 {
   UNREFERENCED_PARAMETER(hPrevInstance);
   UNREFERENCED_PARAMETER(lpCmdLine);
-
-  // TODO: Place code here.
 
   // Initialize global strings
   LoadStringW(hInstance, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
@@ -111,19 +100,19 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     return FALSE;
   }
 
-     // Initialize GDI+.
+  // Initialize GDI+.
   Gdiplus::GdiplusStartupInput gdiplusStartupInput;
   ULONG_PTR gdiplusToken;
   Gdiplus::GdiplusStartup(&gdiplusToken, &gdiplusStartupInput, NULL);
 
   // triangle_test();
 
-  //auto start = std::chrono::high_resolution_clock::now();
-  //auto mesh  = LoadPolyMeshFromFile("./geometry/backdrop.geo", IdentityMtx44f);
-  //auto tt = DeltaTimeMilisec(std::chrono::high_resolution_clock::now(), start);
-  //if (!mesh)
+  // auto start = std::chrono::high_resolution_clock::now();
+  // auto mesh  = LoadPolyMeshFromFile("./geometry/backdrop.geo", IdentityMtx44f);
+  // auto tt = DeltaTimeMilisec(std::chrono::high_resolution_clock::now(), start);
+  // if (!mesh)
   //  OutputDebugString("Failed to load mesh\n");
-  //else
+  // else
   //  OutputDebugString("Load Time: " + std::to_string(tt) + "ms\n");
 
   std::thread t{[hWnd]() {
@@ -132,8 +121,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     PostMessage(hWnd, WM_REDRAW, 0, 0);
   }};
 
-  HACCEL hAccelTable =
-      LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_CPPDESKTOP));
+  HACCEL hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_CPPDESKTOP));
 
   MSG msg;
 
@@ -146,11 +134,15 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
       DispatchMessage(&msg);
     }
   }
+
   t.join();
+
+  // dump image to a file
   CLSID png;
-  if (0 < GetEncoderClsid(L"image/png", &png))
+  if (g_bitmap && 0 < GetEncoderClsid(L"image/png", &png))
     g_bitmap->Save(L"out.png", &png);
   g_bitmap = nullptr;
+
   Gdiplus::GdiplusShutdown(gdiplusToken);
   return (int)msg.wParam;
 }
@@ -195,9 +187,8 @@ HWND InitInstance(HINSTANCE hInstance, int nCmdShow)
 {
   hInst = hInstance; // Store instance handle in our global variable
 
-  HWND hWnd = CreateWindowW(szWindowClass, szTitle, WS_OVERLAPPEDWINDOW,
-                            CW_USEDEFAULT, 0, g_image.width, g_image.height,
-                            nullptr, nullptr, hInstance, nullptr);
+  HWND hWnd = CreateWindowW(szWindowClass, szTitle, WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, 0, g_image.width,
+                            g_image.height, nullptr, nullptr, hInstance, nullptr);
 
   if (!hWnd)
   {
@@ -211,7 +202,7 @@ HWND InitInstance(HINSTANCE hInstance, int nCmdShow)
 }
 
 void OnLButtonUp(HWND hwnd, int x, int y, UINT keyFlags)
-{
+{ // Mouse L button: switch between full screen and a window mode
   DWORD dwStyle = GetWindowLong(hwnd, GWL_STYLE);
   if (dwStyle & WS_OVERLAPPEDWINDOW)
   {
@@ -263,8 +254,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
       auto len = GetTabbedTextExtentA(hdc, s.c_str(), s.size(), 0, 0);
       auto w   = len & 0xFFFF;
       auto h   = len >> 16;
-      TextOutA(hdc, (g_image.width - w) / 2, (g_image.height - h) / 2,
-               s.c_str(), s.size());
+      TextOutA(hdc, (g_image.width - w) / 2, (g_image.height - h) / 2, s.c_str(), s.size());
     }
     EndPaint(hWnd, &ps);
     OutputDebugStringA("Paint\n");

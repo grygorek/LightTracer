@@ -32,25 +32,23 @@ public:
   Vec3f::type radius, radius2; /// sphere radius and radius^2
   Material material;
 
-  Sphere(const Matrix44f &obj2world, float radius_, const Vec3f &surfaceColor_,
-         Vec3f::type reflection_ = 0, Vec3f::type transparency_ = 0) noexcept
+  Sphere(const Matrix44f &obj2world, float radius_, const Vec3f &surfaceColor_, Vec3f::type reflection_ = 0,
+         Vec3f::type transparency_ = 0) noexcept
       : Object(obj2world)
       , radius(radius_)
       , radius2(radius * radius)
-      , material{surfaceColor_, transparency_, reflection_,
-                 transparency_ > 0 ? 1.5f : 1.f}
+      , material{surfaceColor_, transparency_, reflection_, transparency_ > 0 ? 1.5f : 1.f}
   {
     obj2world.multVecMatrix(Vec3f(0), center);
   }
 
-  Sphere(const Vec3f &center_, float radius_, const Vec3f &surfaceColor_,
-         Vec3f::type reflection_ = 0, Vec3f::type transparency_ = 0) noexcept
+  Sphere(const Vec3f &center_, float radius_, const Vec3f &surfaceColor_, Vec3f::type reflection_ = 0,
+         Vec3f::type transparency_ = 0) noexcept
       : Object(IdentityMtx44f)
       , center(center_)
       , radius(radius_)
       , radius2(radius * radius)
-      , material{surfaceColor_, transparency_, reflection_,
-                 transparency_ > 0 ? 1.5f : 1.f}
+      , material{surfaceColor_, transparency_, reflection_, transparency_ > 0 ? 1.5f : 1.f}
   { /* empty */
   }
 
@@ -85,8 +83,7 @@ public:
     return true;
   }
 #elif 1
-  bool Intersect(const Vec3f &ray_orig, const Vec3f &ray_dir,
-                 IntersectInfo &isecInfo) const noexcept override
+  bool Intersect(const Vec3f &ray_orig, const Vec3f &ray_dir, IntersectInfo &isecInfo) const noexcept override
   {
     // Compute a ray - sphere intersection using the geometric solution
     // https://www.scratchapixel.com/lessons/3d-basic-rendering/minimal-ray-tracer-rendering-simple-shapes/ray-sphere-intersection
@@ -123,25 +120,22 @@ public:
 
   // Set surface data such as normal and texture coordinates at a given point on
   // the surface
-  Surface SurfaceProperties(const Vec3f &hitPoint,
-                            const IntersectInfo &isecInfo) const override
+  Surface SurfaceProperties(const Vec3f &hitPoint, const IntersectInfo &isecInfo) const override
   {
     auto hitNormal = (hitPoint - center).normalize();
 
-    // In this particular case, the normal is simular to a point on a unit
+    // In this particular case, the normal is similar to a point on a unit
     // sphere centred around the origin. We can thus use the normal coordinates
     // to compute the spherical coordinates of Phit. atan2 returns a value in
     // the range [-pi, pi] and we need to remap it to range [0, 1] acosf returns
     // a value in the range [0, pi] and we also need to remap it to the range
     // [0, 1]
-    return Surface{
-        0,
-        0,
-        hitNormal,
-        {static_cast<typename Vec3f::type>(
-             (1 + atan2(hitNormal.z, hitNormal.x) / M_PI) * 0.5),
-         static_cast<typename Vec3f::type>(acosf(hitNormal.y) / M_PI)},
-        &material};
+    return Surface{0,
+                   0,
+                   hitNormal,
+                   {static_cast<typename Vec3f::type>((1 + atan2(hitNormal.z, hitNormal.x) / M_PI) * 0.5),
+                    static_cast<typename Vec3f::type>(acosf(hitNormal.y) / M_PI)},
+                   &material};
   }
 };
 

@@ -21,6 +21,7 @@ public:
   }
   virtual ~Light() {}
   virtual ShadeProperty Illuminate(const Vec3f &hitPoint) const = 0;
+  virtual Vec3f Position() const                                = 0;
 
   Vec3f color;
   float intensity;
@@ -32,17 +33,15 @@ class DistantLight : public Light
   Vec3f dir;
 
 public:
-  DistantLight(const Vec3f &direction, const Vec3f &color = 1,
-               float intensity = 1)
+  DistantLight(const Vec3f &direction, const Vec3f &color = 1, float intensity = 1)
       : Light(color, intensity)
       , dir(direction.normalize())
   {
   }
 
-  ShadeProperty Illuminate(const Vec3f &P) const override
-  {
-    return ShadeProperty{dir, color * intensity, kInfinity};
-  }
+  Vec3f Position() const override { return -dir * 100'000.0; }
+
+  ShadeProperty Illuminate(const Vec3f &P) const override { return ShadeProperty{dir, color * intensity, kInfinity}; }
 };
 
 // Point light
@@ -56,6 +55,9 @@ public:
       , position(pos)
   {
   }
+  
+  Vec3f Position() const override { return position; }
+
   // P: is the shaded point
   ShadeProperty Illuminate(const Vec3f &P) const override
   {
